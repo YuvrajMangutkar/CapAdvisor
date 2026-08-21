@@ -6,6 +6,7 @@ import StudentForm from './components/StudentForm';
 import ResultsList from './components/ResultsList';
 import FloatingBackground from './components/FloatingBackground';
 import ContactPage from './components/ContactPage';
+import AboutPage from './components/AboutPage';
 import { generateList } from './api';
 
 export default function App() {
@@ -14,6 +15,7 @@ export default function App() {
   const [results, setResults] = useState(null);
   const [searchParams, setSearchParams] = useState(null);
   const [showContact, setShowContact] = useState(false);
+  const [showAbout, setShowAbout] = useState(false);
 
   const handleGenerate = async (params) => {
     setLoading(true);
@@ -43,20 +45,20 @@ export default function App() {
         transition={{ duration: 0.6, ease: "easeOut" }}
         className="site-nav relative z-10 flex items-center justify-between py-5 mb-10"
       >
-        <button type="button" className="brand-lockup" onClick={() => setShowContact(false)}>
+        <button type="button" className="brand-lockup" onClick={() => { setShowContact(false); setShowAbout(false); }}>
           <div className="brand-mark">
             <Compass size={20} color="white" />
           </div>
           CAP Advisor
         </button>
         <div className="flex items-center gap-4">
-          <button type="button" className="nav-action hidden sm:block" onClick={() => document.getElementById('about')?.scrollIntoView({ behavior: 'smooth' })}>About</button>
-          <button type="button" className="nav-action hidden sm:block" onClick={() => setShowContact(true)}>Contact</button>
+          <button type="button" className="nav-action hidden sm:block" onClick={() => { setShowAbout(true); setShowContact(false); }}>About</button>
+          <button type="button" className="nav-action hidden sm:block" onClick={() => { setShowContact(true); setShowAbout(false); }}>Contact</button>
           <div className="season-tag">MHT-CET 2026</div>
         </div>
       </motion.nav>
 
-      {showContact ? <ContactPage onBack={() => setShowContact(false)} /> : <>
+      {showContact ? <ContactPage onBack={() => setShowContact(false)} /> : showAbout ? <AboutPage onBack={() => setShowAbout(false)} /> : <>
 
       {/* ── Hero ── */}
       <header className="hero-copy text-center py-8 relative z-10">
@@ -136,7 +138,7 @@ export default function App() {
             <h2 className="text-lg font-bold text-white">Questions about a CAP cutoff?</h2>
             <p className="text-sm text-slate-400 mt-1">Send the college, branch, category, and round details so the data can be checked precisely.</p>
           </div>
-          <button type="button" onClick={() => setShowContact(true)} className="inline-flex items-center justify-center gap-2 text-sm font-bold px-4 py-3 rounded-xl bg-indigo-500 text-white hover:bg-indigo-400 transition-colors">Contact support</button>
+          <button type="button" onClick={() => { setShowContact(true); setShowAbout(false); }} className="inline-flex items-center justify-center gap-2 text-sm font-bold px-4 py-3 rounded-xl bg-indigo-500 text-white hover:bg-indigo-400 transition-colors">Contact support</button>
         </div>
       </section>
       </>}

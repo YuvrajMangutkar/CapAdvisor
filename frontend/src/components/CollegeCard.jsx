@@ -44,7 +44,7 @@ export default function CollegeCard({ entry, style }) {
       whileHover={{ y: -3 }}
       transition={{ duration: 0.2 }}
       onClick={() => setExpanded(v => !v)}
-      className={`relative w-full rounded-2xl border p-5 mb-3 bg-gradient-to-br ${styleConfig.bg} ${styleConfig.hover} shadow-lg cursor-pointer transition-all duration-200`}
+      className={`result-card relative w-full rounded-2xl border p-5 mb-3 bg-gradient-to-br ${styleConfig.bg} ${styleConfig.hover} shadow-lg cursor-pointer transition-all duration-200`}
       role="button"
       aria-expanded={expanded}
       id={`card-${entry.rank}`}
