@@ -50,7 +50,7 @@ export default function App() {
           CAP Advisor
         </button>
         <div className="flex items-center gap-4">
-          <a href="#about" className="hidden sm:block text-xs font-semibold text-slate-400 hover:text-white">About</a>
+          <button type="button" className="nav-action hidden sm:block" onClick={() => document.getElementById('about')?.scrollIntoView({ behavior: 'smooth' })}>About</button>
           <button type="button" className="nav-action hidden sm:block" onClick={() => setShowContact(true)}>Contact</button>
           <div className="season-tag">MHT-CET 2026</div>
         </div>
