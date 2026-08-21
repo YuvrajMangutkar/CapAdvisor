@@ -1,0 +1,17 @@
+# Environment files and secrets
+.env
+.env.*
+!.env.example
+
+# Python cache
+__pycache__/
+*.py[cod]
+
+# Local data and tooling
+.pytest_cache/
+.vscode/
+
+# Generated and local-only artifacts
+*.xlsx
+data/raw/cap/*.pdf
+/package-lock.json

@@ -1,0 +1,51 @@
+version: "3.9"
+
+services:
+  db:
+    image: pgvector/pgvector:pg16
+    container_name: cap_postgres
+    environment:
+      POSTGRES_USER: cap_user
+      POSTGRES_PASSWORD: cap_pass
+      POSTGRES_DB: cap_db
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U cap_user -d cap_db"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: cap_backend
+    environment:
+      DATABASE_URL: postgresql://cap_user:cap_pass@db:5432/cap_db
+      OPENAI_API_KEY: ${OPENAI_API_KEY:-}
+      PYTHONPATH: /app
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./data:/app/data
+      - ./ml:/app/ml
+    depends_on:
+      db:
+        condition: service_healthy
+    command: uvicorn main:app --host 0.0.0.0 --port 8000 --reload
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: cap_frontend
+    ports:
+      - "5173:5173"
+    depends_on:
+      - backend
+
+volumes:
+  pgdata:
