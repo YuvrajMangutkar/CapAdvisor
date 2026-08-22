@@ -102,7 +102,7 @@ export default function StudentForm({ onSubmit, loading }) {
               onChange={e => setCategory(e.target.value)}
             >
               {catalog.categories.map(c => (
-                <option key={c.code} value={c.code} className="bg-slate-950">{c.label}</option>
+                <option key={c.code} value={c.code}>{c.label}</option>
               ))}
             </select>
           </div>
