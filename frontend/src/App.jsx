@@ -142,6 +142,29 @@ export default function App() {
         </div>
       </section>
       </>}
+
+      {/* ── Footer ── */}
+      <footer className="relative z-10 mt-20 pt-8 border-t border-slate-800/60 text-center text-xs text-slate-500 flex flex-col sm:flex-row justify-between items-center gap-4">
+        <p>
+          &copy; {new Date().getFullYear()} CAP Advisor. All rights reserved.
+        </p>
+        <div className="flex gap-4">
+          <button 
+            type="button" 
+            className="hover:text-slate-300 transition-colors cursor-pointer" 
+            onClick={() => { setShowAbout(true); setShowContact(false); }}
+          >
+            About
+          </button>
+          <button 
+            type="button" 
+            className="hover:text-slate-300 transition-colors cursor-pointer" 
+            onClick={() => { setShowContact(true); setShowAbout(false); }}
+          >
+            Contact Support
+          </button>
+        </div>
+      </footer>
     </div>
   );
 }
