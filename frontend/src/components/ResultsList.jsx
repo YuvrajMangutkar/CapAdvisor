@@ -1,9 +1,15 @@
-// src/components/ResultsList.jsx
+import { useState } from 'react';
 import { getExcelUrl, getPdfUrl } from '../api';
 import CollegeCard from './CollegeCard';
 
-export default function ResultsList({ data, searchParams }) {
+export default function ResultsList({ data, searchParams, onTriggerFeedback }) {
+  const [downloadNotice, setDownloadNotice] = useState(false);
+
   if (!data) return null;
+
+  const handleDownloadClick = () => {
+    setDownloadNotice(true);
+  };
 
   const {
     student_percentile,
@@ -128,6 +134,7 @@ export default function ResultsList({ data, searchParams }) {
           <a
             id="export-excel-btn"
             href={getExcelUrl(searchParams)}
+            onClick={handleDownloadClick}
             className="flex-1 sm:flex-none text-center text-xs font-bold px-4 py-2.5 rounded-xl border border-slate-800 bg-slate-900 text-slate-300 hover:border-indigo-500 hover:text-indigo-400 transition-all duration-150 cursor-pointer"
             download
           >
@@ -136,6 +143,7 @@ export default function ResultsList({ data, searchParams }) {
           <a
             id="export-pdf-btn"
             href={getPdfUrl(searchParams)}
+            onClick={handleDownloadClick}
             className="flex-1 sm:flex-none text-center text-xs font-bold px-4 py-2.5 rounded-xl border border-slate-800 bg-slate-900 text-slate-300 hover:border-purple-500 hover:text-purple-400 transition-all duration-150 cursor-pointer"
             download
           >
@@ -143,6 +151,19 @@ export default function ResultsList({ data, searchParams }) {
           </a>
         </div>
       </div>
+
+      {downloadNotice && (
+        <div className="mt-4 p-4 rounded-2xl bg-teal-500/10 border border-teal-500/30 text-teal-300 text-xs flex flex-col sm:flex-row items-center justify-between gap-3 shadow-lg">
+          <span>🎉 <strong>Download Started!</strong> How was your experience generating your list? Tell us if you faced any issues.</span>
+          <button
+            type="button"
+            onClick={() => onTriggerFeedback && onTriggerFeedback(true)}
+            className="px-4 py-2 rounded-xl bg-teal-600 hover:bg-teal-500 text-white font-bold text-xs transition-all active:scale-95 shrink-0 cursor-pointer shadow-sm"
+          >
+            Share Experience & Feedback 💬
+          </button>
+        </div>
+      )}
     </div>
   );
 }

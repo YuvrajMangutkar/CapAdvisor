@@ -7,6 +7,8 @@ import ResultsList from './components/ResultsList';
 import FloatingBackground from './components/FloatingBackground';
 import ContactPage from './components/ContactPage';
 import AboutPage from './components/AboutPage';
+import FeedbackPage from './components/FeedbackPage';
+import Footer from './components/Footer';
 import { generateList } from './api';
 
 export default function App() {
@@ -16,6 +18,8 @@ export default function App() {
   const [searchParams, setSearchParams] = useState(null);
   const [showContact, setShowContact] = useState(false);
   const [showAbout, setShowAbout] = useState(false);
+  const [showFeedback, setShowFeedback] = useState(false);
+  const [feedbackInitialTrigger, setFeedbackInitialTrigger] = useState(false);
 
   const handleGenerate = async (params) => {
     setLoading(true);
@@ -34,6 +38,14 @@ export default function App() {
     }
   };
 
+  const handleOpenFeedback = (isInitial = false) => {
+    setShowFeedback(true);
+    setShowAbout(false);
+    setShowContact(false);
+    setFeedbackInitialTrigger(isInitial);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
   return (
     <div className="site-shell relative min-h-screen z-10 max-w-6xl mx-auto px-4 pb-20 sm:px-6">
       {/* ── Background Mesh ── */}
@@ -45,38 +57,40 @@ export default function App() {
         transition={{ duration: 0.6, ease: "easeOut" }}
         className="site-nav relative z-10 flex items-center justify-between py-5 mb-10"
       >
-        <button type="button" className="brand-lockup" onClick={() => { setShowContact(false); setShowAbout(false); }}>
+        <button type="button" className="brand-lockup cursor-pointer" onClick={() => { setShowContact(false); setShowAbout(false); setShowFeedback(false); }}>
           <div className="brand-mark">
             <Compass size={20} color="white" />
           </div>
           CAP Advisor
         </button>
         <div className="flex items-center gap-4">
-          <button type="button" className="nav-action hidden sm:block" onClick={() => { setShowAbout(true); setShowContact(false); }}>About</button>
-          <button type="button" className="nav-action hidden sm:block" onClick={() => { setShowContact(true); setShowAbout(false); }}>Contact</button>
+          <button type="button" className="nav-action hidden sm:block cursor-pointer" onClick={() => { setShowAbout(true); setShowContact(false); setShowFeedback(false); }}>About</button>
+          <button type="button" className="nav-action hidden sm:block cursor-pointer" onClick={() => { setShowContact(true); setShowAbout(false); setShowFeedback(false); }}>Contact</button>
+          <button type="button" className="nav-action hidden sm:block cursor-pointer" onClick={() => handleOpenFeedback(false)}>Feedback</button>
           <div className="season-tag">MHT-CET 2026</div>
         </div>
       </motion.nav>
 
-      {showContact ? <ContactPage onBack={() => setShowContact(false)} /> : showAbout ? <AboutPage onBack={() => setShowAbout(false)} /> : <>
+      {showContact ? (
+        <ContactPage onBack={() => setShowContact(false)} />
+      ) : showAbout ? (
+        <AboutPage onBack={() => setShowAbout(false)} />
+      ) : showFeedback ? (
+        <FeedbackPage
+          onBack={() => setShowFeedback(false)}
+          onNavigateContact={() => { setShowContact(true); setShowAbout(false); setShowFeedback(false); }}
+          initialTrigger={feedbackInitialTrigger}
+        />
+      ) : (
+        <>
 
       {/* ── Hero ── */}
-      <header className="hero-copy text-center py-8 relative z-10">
-        <motion.div 
-          initial={{ scale: 0.8, opacity: 0 }}
-          animate={{ scale: 1, opacity: 1 }}
-          transition={{ duration: 0.5, delay: 0.1 }}
-          className="kicker inline-flex items-center gap-2 mb-6"
-        >
-          <Sparkles size={14} className="text-purple-400 animate-pulse" />
-          Powered by ML Cutoff Prediction
-        </motion.div>
-        
+      <header className="hero-copy text-center py-6 relative z-10">
         <motion.h1 
           initial={{ y: 20, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
-          transition={{ duration: 0.7, delay: 0.2 }}
-          className="text-4xl md:text-6xl font-extrabold tracking-tight mb-6 leading-tight text-stone-950"
+          transition={{ duration: 0.7, delay: 0.1 }}
+          className="text-4xl md:text-6xl font-extrabold tracking-tight mb-4 leading-tight text-stone-950"
         >
           Master your <span className="animated-gradient">CAP Round</span> List.
         </motion.h1>
@@ -84,12 +98,10 @@ export default function App() {
         <motion.p
           initial={{ y: 20, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
-          transition={{ duration: 0.7, delay: 0.3 }}
-          className="text-stone-600 max-w-xl mx-auto text-base md:text-lg leading-relaxed mb-8"
+          transition={{ duration: 0.7, delay: 0.2 }}
+          className="text-stone-600 max-w-lg mx-auto text-base leading-relaxed mb-6 font-medium"
         >
-          Don't lose out on a better college because of a badly ordered preference list.
-          Enter your details below, and our AI will predict this year's cutoffs and generate
-          the mathematically optimal list order.
+          Generate your personalized college preference list based on real MHT-CET cutoff trends.
         </motion.p>
       </header>
 
@@ -116,7 +128,7 @@ export default function App() {
           )}
         </AnimatePresence>
 
-        <ResultsList data={results} searchParams={searchParams} />
+        <ResultsList data={results} searchParams={searchParams} onTriggerFeedback={handleOpenFeedback} />
       </main>
 
       <section id="about" className="relative z-10 grid md:grid-cols-2 gap-10 mt-20 pt-10 border-t border-slate-800/80 scroll-mt-8">
@@ -138,33 +150,14 @@ export default function App() {
             <h2 className="text-lg font-bold text-white">Questions about a CAP cutoff?</h2>
             <p className="text-sm text-slate-400 mt-1">Send the college, branch, category, and round details so the data can be checked precisely.</p>
           </div>
-          <button type="button" onClick={() => { setShowContact(true); setShowAbout(false); }} className="inline-flex items-center justify-center gap-2 text-sm font-bold px-4 py-3 rounded-xl bg-indigo-500 text-white hover:bg-indigo-400 transition-colors">Contact support</button>
+          <button type="button" onClick={() => { setShowContact(true); setShowAbout(false); setShowFeedback(false); }} className="inline-flex items-center justify-center gap-2 text-sm font-bold px-4 py-3 rounded-xl bg-indigo-500 text-white hover:bg-indigo-400 transition-colors cursor-pointer">Contact support</button>
         </div>
       </section>
-      </>}
+        </>
+      )}
 
-      {/* ── Footer ── */}
-      <footer className="relative z-10 mt-20 pt-8 border-t border-slate-800/60 text-center text-xs text-slate-500 flex flex-col sm:flex-row justify-between items-center gap-4">
-        <p>
-          &copy; {new Date().getFullYear()} CAP Advisor. All rights reserved.
-        </p>
-        <div className="flex gap-4">
-          <button 
-            type="button" 
-            className="hover:text-slate-300 transition-colors cursor-pointer" 
-            onClick={() => { setShowAbout(true); setShowContact(false); }}
-          >
-            About
-          </button>
-          <button 
-            type="button" 
-            className="hover:text-slate-300 transition-colors cursor-pointer" 
-            onClick={() => { setShowContact(true); setShowAbout(false); }}
-          >
-            Contact Support
-          </button>
-        </div>
-      </footer>
+      {/* ── Minimalist Footer ── */}
+      <Footer />
     </div>
   );
 }

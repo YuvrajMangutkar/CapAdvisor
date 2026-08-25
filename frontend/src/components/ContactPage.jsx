@@ -2,8 +2,6 @@ import { useState } from 'react';
 import { ArrowLeft, Mail, Send } from 'lucide-react';
 import { sendContact } from '../api';
 
-const SUPPORT_EMAIL = 'yuvrajmangutkar70@gmail.com';
-
 export default function ContactPage({ onBack }) {
   const [form, setForm] = useState({ name: '', email: '', subject: '', message: '' });
   const [status, setStatus] = useState({ loading: false, error: '', success: '' });
@@ -31,7 +29,6 @@ export default function ContactPage({ onBack }) {
           <span className="kicker">Support desk</span>
           <h1>Let’s make your CAP list clearer.</h1>
           <p>Share the college, branch, category, and round details. Your message will be delivered directly to our support inbox.</p>
-          <div className="contact-address"><Mail size={17} /> {SUPPORT_EMAIL}</div>
         </div>
 
         <form className="contact-form" onSubmit={handleSubmit}>

@@ -17,7 +17,6 @@ body {
 #contact .text-white { color: #1c1917 !important; }
 .hero-copy p { color: #44403c !important; }
 
-.site-shell::before { content: ''; position: absolute; z-index: -1; top: 0; bottom: 0; left: 50%; width: 1px; background: rgba(15, 118, 110, .16); }
 .site-nav { border-bottom: 1px solid rgba(41, 37, 36, .14); }
 .brand-lockup { display: flex; align-items: center; gap: 12px; color: #1c1917; font-size: 18px; font-weight: 700; letter-spacing: -.02em; cursor: pointer; }
 .nav-action { color: #44403c; font-size: 12px; font-weight: 700; cursor: pointer; }
@@ -143,8 +142,23 @@ body {
   box-shadow: 0 0 15px rgba(15, 118, 110, 0.35);
 }
 
-@media (max-width: 640px) { .site-shell::before { left: 18px; opacity: .6; } .site-nav { margin-bottom: 5px; } .hero-copy { padding-top: 2rem; } .contact-layout, .about-process { grid-template-columns: 1fr; padding-top: 3rem; gap: 2.5rem; } .contact-intro h1, .about-hero h1 { font-size: 3rem; } .about-grid { grid-template-columns: 1fr; } .about-card { min-height: auto; } }
+@media (max-width: 640px) { .site-nav { margin-bottom: 5px; } .hero-copy { padding-top: 2rem; } .contact-layout, .about-process { grid-template-columns: 1fr; padding-top: 3rem; gap: 2.5rem; } .contact-intro h1, .about-hero h1 { font-size: 3rem; } .about-grid { grid-template-columns: 1fr; } .about-card { min-height: auto; } }
 
 .range-slider::-webkit-slider-thumb:hover {
   @apply scale-125;
 }
+
+/* Footer interactive elements styling */
+.footer-root {
+  transition: all 0.3s ease;
+}
+
+.footer-root button {
+  cursor: pointer;
+}
+
+.footer-root input::placeholder,
+.footer-root select {
+  font-family: inherit;
+}
+

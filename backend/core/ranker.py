@@ -116,11 +116,15 @@ def rank_list(
     }
 
     for c in candidates:
+        # Exclude low-cutoff colleges below the student's score (keep exact merit & higher merit colleges)
+        if c["predicted_closing"] < (student.percentile - 1.0):
+            continue
+
         tier = classify(
             student.percentile, c["lower_bound"], c["upper_bound"]
         )
         if tier is None:
-            continue  # Out of reach — skip
+            continue  # Out of range — skip
 
         feat  = feasibility_score(student.percentile, c["lower_bound"], c["upper_bound"])
         loc   = _location_score(c["district"], student.preferred_districts)

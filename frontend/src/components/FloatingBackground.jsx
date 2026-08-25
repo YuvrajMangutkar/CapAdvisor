@@ -27,30 +27,31 @@ export default function FloatingBackground() {
   const [items, setItems] = useState([]);
 
   useEffect(() => {
-    // Generate floating items with random positions, paths, and durations
+    // Generate subtle floating items positioned safely behind content
     const generated = Array.from({ length: 18 }).map((_, idx) => {
       const IconComponent = ICON_COMPONENTS[idx % ICON_COMPONENTS.length];
-      const size = Math.floor(Math.random() * 24) + 20; // 20px to 44px
+      const size = Math.floor(Math.random() * 16) + 22; // 22px to 38px
       
-      // Random starting positions (viewport relative)
-      const startX = Math.random() * 100; // 0% to 100%
-      const startY = Math.random() * 100; // 0% to 100%
+      // Random starting positions
+      const startX = Math.random() * 92;
+      const startY = Math.random() * 92;
       
-      // Random movement offsets
-      const driftX = (Math.random() - 0.5) * 40; // -20% to +20%
-      const driftY = (Math.random() - 0.5) * 40; // -20% to +20%
+      // Gentle movement offsets
+      const driftX = (Math.random() - 0.5) * 20;
+      const driftY = (Math.random() - 0.5) * 20;
       
-      // Duration & delays for natural offsets
-      const duration = Math.random() * 30 + 30; // 30s to 60s
-      const delay = Math.random() * -60; // Start at pre-drifting phase (negative delay)
+      // Smooth duration
+      const duration = Math.random() * 25 + 25;
+      const delay = Math.random() * -50;
 
-      // Random custom colors for study materials floating
+      // Soft, balanced opacities (18%-25%) that don't obscure text
       const colors = [
-        'text-indigo-500/10',
-        'text-purple-500/10',
-        'text-pink-500/10',
-        'text-blue-500/10',
-        'text-teal-500/10',
+        'text-teal-800/20',
+        'text-indigo-800/20',
+        'text-purple-800/20',
+        'text-rose-700/20',
+        'text-emerald-800/20',
+        'text-amber-700/20',
       ];
       const color = colors[idx % colors.length];
 
@@ -72,10 +73,12 @@ export default function FloatingBackground() {
   }, []);
 
   return (
-    <div className="fixed inset-0 overflow-hidden pointer-events-none z-0">
+    <div className="fixed inset-0 overflow-hidden pointer-events-none -z-10">
+      {/* Background Mesh Gradient */}
       <div className="live-aurora absolute inset-0" />
-      <div className="absolute inset-0 opacity-[0.08] bg-[linear-gradient(rgba(255,255,255,0.16)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.16)_1px,transparent_1px)] bg-[size:56px_56px]" />
+      <div className="absolute inset-0 opacity-[0.06] bg-[linear-gradient(rgba(15,118,110,0.18)_1px,transparent_1px),linear-gradient(90deg,rgba(15,118,110,0.18)_1px,transparent_1px)] bg-[size:56px_56px]" />
 
+      {/* Floating Animated Icons behind content */}
       {items.map(item => {
         const { IconComponent } = item;
         return (
@@ -89,7 +92,8 @@ export default function FloatingBackground() {
             animate={{
               x: [`0vw`, `${item.driftX}vw`, `0vw`],
               y: [`0vh`, `${item.driftY}vh`, `0vh`],
-              rotate: [0, 360],
+              scale: [1, 1.1, 0.95, 1],
+              rotate: [0, 180, 360],
             }}
             transition={{
               duration: item.duration,
@@ -98,7 +102,7 @@ export default function FloatingBackground() {
               ease: "easeInOut",
             }}
           >
-            <IconComponent size={item.size} strokeWidth={1.5} />
+            <IconComponent size={item.size} strokeWidth={1.75} />
           </motion.div>
         );
       })}

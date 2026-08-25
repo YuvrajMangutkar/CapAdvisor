@@ -15,3 +15,4 @@ __pycache__/
 *.xlsx
 data/raw/cap/*.pdf
 /package-lock.json
+scratch/
