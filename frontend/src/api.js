@@ -31,6 +31,19 @@ export async function generateList(payload) {
   return res.json();
 }
 
+export async function compareTop5Colleges(payload) {
+  const res = await fetch(`${BASE}/compare-top5`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload),
+  });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({ detail: 'Comparison request failed' }));
+    throw new Error(err.detail || `HTTP ${res.status}`);
+  }
+  return res.json();
+}
+
 export async function sendContact(payload) {
   const res = await fetch(`${BASE}/contact`, {
     method: 'POST',

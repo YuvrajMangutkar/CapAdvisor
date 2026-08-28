@@ -1,9 +1,14 @@
 import { useState } from 'react';
-import { getExcelUrl, getPdfUrl } from '../api';
+import { AnimatePresence } from 'framer-motion';
+import { getExcelUrl, getPdfUrl, compareTop5Colleges } from '../api';
 import CollegeCard from './CollegeCard';
+import CollegeComparison from './CollegeComparison';
 
 export default function ResultsList({ data, searchParams, onTriggerFeedback }) {
   const [downloadNotice, setDownloadNotice] = useState(false);
+  const [comparisonData, setComparisonData] = useState(null);
+  const [comparingLoading, setComparingLoading] = useState(false);
+  const [showCompareModal, setShowCompareModal] = useState(false);
 
   if (!data) return null;
 
@@ -20,6 +25,23 @@ export default function ResultsList({ data, searchParams, onTriggerFeedback }) {
     explore_count,
     entries,
   } = data;
+
+  const handleCompareTop5 = async () => {
+    setComparingLoading(true);
+    try {
+      const result = await compareTop5Colleges({
+        student_percentile,
+        category_code,
+        top_entries: entries.slice(0, 5)
+      });
+      setComparisonData(result);
+      setShowCompareModal(true);
+    } catch (err) {
+      alert(err.message || 'Unable to load college comparison');
+    } finally {
+      setComparingLoading(false);
+    }
+  };
 
   if (entries.length === 0) {
     return (
@@ -44,7 +66,23 @@ export default function ResultsList({ data, searchParams, onTriggerFeedback }) {
             Percentile: <span className="font-bold text-indigo-400">{student_percentile}</span> | Category: <span className="font-bold text-purple-400">{category_code}</span>
           </p>
         </div>
-        <div className="flex gap-2">
+        <div className="flex flex-wrap items-center gap-2">
+          <button
+            type="button"
+            onClick={handleCompareTop5}
+            disabled={comparingLoading}
+            className="inline-flex items-center justify-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-gradient-to-r from-teal-600 to-indigo-600 hover:from-teal-500 hover:to-indigo-500 text-white font-bold text-xs shadow-md transition-all active:scale-95 cursor-pointer disabled:opacity-50 mr-2"
+          >
+            {comparingLoading ? (
+              <>
+                <div className="w-3.5 h-3.5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                Analyzing Top 5...
+              </>
+            ) : (
+              <>📊 Compare Top 5 Colleges & AI Insights</>
+            )}
+          </button>
+
           {reach_count > 0 && (
             <span className="text-xs font-bold px-3 py-1 rounded-full bg-amber-500/10 border border-amber-500/30 text-amber-400">
               {reach_count} Reach
@@ -164,6 +202,15 @@ export default function ResultsList({ data, searchParams, onTriggerFeedback }) {
           </button>
         </div>
       )}
+
+      <AnimatePresence>
+        {showCompareModal && (
+          <CollegeComparison
+            data={comparisonData}
+            onClose={() => setShowCompareModal(false)}
+          />
+        )}
+      </AnimatePresence>
     </div>
   );
 }

@@ -20,9 +20,11 @@ from typing import List, Optional
 
 from api.schemas import (
     GenerateListRequest, GenerateListResponse, ContactRequest, CollegeEntryResponse,
-    CollegeResponse, BranchResponse, CategoryResponse, HealthResponse
+    CollegeResponse, BranchResponse, CategoryResponse, HealthResponse,
+    CompareTop5Request, CompareTop5Response, CollegeComparisonItem
 )
 from core.prediction_service import generate_preference_list, TARGET_YEAR
+from core.college_comparison import get_enriched_metrics, generate_groq_ai_summary
 from ml.predict import get_predictor
 
 router = APIRouter(prefix="/api/v1", tags=["CAP Platform"])
@@ -167,6 +169,56 @@ def generate_list(req: GenerateListRequest):
             )
             for e in entries
         ],
+    )
+
+
+@router.post("/compare-top5", response_model=CompareTop5Response)
+def compare_top5_colleges(req: CompareTop5Request):
+    """
+    Enriches top 5 matched colleges with placement stats, recruiters,
+    lab quality ratings, campus image galleries, and generates AI insights.
+    """
+    top_5 = req.top_entries[:5]
+    if not top_5:
+        raise HTTPException(status_code=400, detail="No college entries provided for comparison")
+
+    comparison_items = []
+    enriched_for_ai = []
+
+    for entry in top_5:
+        metrics = get_enriched_metrics(entry.college_name)
+        item = CollegeComparisonItem(
+            rank=entry.rank,
+            college_id=entry.college_id,
+            college_name=entry.college_name,
+            district=entry.district,
+            branch_name=entry.branch_name,
+            branch_code=entry.branch_code,
+            predicted_closing=entry.predicted_closing,
+            nirf_rank_proxy=entry.nirf_rank_proxy,
+            placement_rate=metrics["placement_rate"],
+            avg_package_lpa=metrics["avg_package_lpa"],
+            highest_package_lpa=metrics["highest_package_lpa"],
+            top_recruiters=metrics["top_recruiters"],
+            lab_quality_rating=metrics["lab_quality_rating"],
+            infrastructure_rating=metrics["infrastructure_rating"],
+            image_url=metrics["image_url"],
+            highlights=metrics["highlights"]
+        )
+        comparison_items.append(item)
+        enriched_for_ai.append(item.model_dump())
+
+    ai_summary = generate_groq_ai_summary(
+        student_percentile=req.student_percentile,
+        category_code=req.category_code,
+        top_colleges=enriched_for_ai
+    )
+
+    return CompareTop5Response(
+        student_percentile=req.student_percentile,
+        category_code=req.category_code,
+        comparison_items=comparison_items,
+        ai_decision_summary=ai_summary
     )
 
 

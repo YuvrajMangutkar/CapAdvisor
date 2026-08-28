@@ -130,3 +130,36 @@ class HealthResponse(BaseModel):
     status: str
     version: str
     model_loaded: bool
+
+
+class CompareTop5Request(BaseModel):
+    student_percentile: float = Field(..., ge=0.0, le=100.0)
+    category_code: str
+    top_entries: List[CollegeEntryResponse]
+
+
+class CollegeComparisonItem(BaseModel):
+    rank: int
+    college_id: int
+    college_name: str
+    district: str
+    branch_name: str
+    branch_code: str
+    predicted_closing: float
+    nirf_rank_proxy: int
+    placement_rate: float
+    avg_package_lpa: float
+    highest_package_lpa: float
+    top_recruiters: List[str]
+    lab_quality_rating: float
+    infrastructure_rating: float
+    image_url: str
+    highlights: str
+
+
+class CompareTop5Response(BaseModel):
+    student_percentile: float
+    category_code: str
+    comparison_items: List[CollegeComparisonItem]
+    ai_decision_summary: str
+
