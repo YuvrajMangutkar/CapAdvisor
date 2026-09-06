@@ -13,6 +13,9 @@ import {
   MapPin
 } from 'lucide-react';
 
+const FALLBACK_IMAGE =
+  'https://images.unsplash.com/photo-1562774053-701939374585?auto=format&fit=crop&w=800&q=80';
+
 export default function CollegeComparison({ data, onClose }) {
   if (!data) return null;
 
@@ -93,6 +96,11 @@ export default function CollegeComparison({ data, onClose }) {
                   src={item.image_url}
                   alt={item.college_name}
                   className="w-full h-full object-cover"
+                  onError={(event) => {
+                    if (event.currentTarget.src !== FALLBACK_IMAGE) {
+                      event.currentTarget.src = FALLBACK_IMAGE;
+                    }
+                  }}
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-stone-950/80 via-transparent to-transparent" />
                 <span className="absolute top-2 left-2 px-2 py-0.5 rounded-md bg-stone-900/80 text-white text-[10px] font-extrabold shadow-sm">
@@ -168,6 +176,9 @@ export default function CollegeComparison({ data, onClose }) {
                 {/* Highlight Note */}
                 <p className="text-[10px] text-stone-500 leading-tight italic pt-1 border-t border-stone-200/60">
                   "{item.highlights}"
+                </p>
+                <p className="text-[9px] text-stone-400 pt-1">
+                  Source: {item.data_source}
                 </p>
 
               </div>

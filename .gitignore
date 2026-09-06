@@ -14,5 +14,6 @@ __pycache__/
 # Generated and local-only artifacts
 *.xlsx
 data/raw/cap/*.pdf
+data/cache/*
 /package-lock.json
 scratch/

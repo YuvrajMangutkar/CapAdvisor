@@ -9,9 +9,13 @@ from __future__ import annotations
 
 import os
 import json
+import tempfile
+import threading
 import urllib.request
-import urllib.error
-from typing import List, Dict, Any, Optional
+from datetime import datetime, timezone
+from typing import List, Dict, Any
+
+from core.college_scraper import AUTHENTIC_COLLEGE_RECORDS, scrape_college_record
 
 # Path to authentic scraped dataset
 DATA_FILE = os.path.join(os.path.dirname(__file__), "..", "..", "data", "processed", "scraped_college_metrics.json")
@@ -28,6 +32,12 @@ def load_scraped_metrics() -> Dict[str, Any]:
     return {}
 
 COLLEGE_METRICS_DB = load_scraped_metrics()
+CACHE_FILE = os.getenv(
+    "COLLEGE_METRICS_CACHE_FILE",
+    os.path.join(os.path.dirname(__file__), "..", "..", "data", "cache", "college_metrics_cache.json"),
+)
+CACHE_TTL_SECONDS = int(os.getenv("COLLEGE_METRICS_CACHE_TTL_SECONDS", "86400"))
+_CACHE_LOCK = threading.Lock()
 
 DEFAULT_METRICS = {
     "placement_rate": 83.5,
@@ -37,20 +47,89 @@ DEFAULT_METRICS = {
     "lab_quality_rating": 4.2,
     "infrastructure_rating": 4.1,
     "image_url": "https://images.unsplash.com/photo-1562774053-701939374585?auto=format&fit=crop&w=800&q=80",
+    "image_source": "Verified fallback image",
     "highlights": "Affiliated laboratories, active placement cell, established curriculum."
 }
 
 
-def get_enriched_metrics(college_name: str) -> Dict[str, Any]:
-    """Finds matching authentic metrics for a college by keyword search or returns default."""
+def _load_cache() -> Dict[str, Any]:
+    if not os.path.exists(CACHE_FILE):
+        return {}
+    try:
+        with open(CACHE_FILE, "r", encoding="utf-8") as file:
+            data = json.load(file)
+        return data if isinstance(data, dict) else {}
+    except (OSError, ValueError):
+        return {}
+
+
+def _write_cache(cache: Dict[str, Any]) -> None:
+    directory = os.path.dirname(CACHE_FILE)
+    os.makedirs(directory, exist_ok=True)
+    fd, temporary_path = tempfile.mkstemp(prefix=".college-metrics-", suffix=".json", dir=directory)
+    try:
+        with os.fdopen(fd, "w", encoding="utf-8") as file:
+            json.dump(cache, file, indent=2, ensure_ascii=False)
+        os.replace(temporary_path, CACHE_FILE)
+    except Exception:
+        if os.path.exists(temporary_path):
+            os.unlink(temporary_path)
+        raise
+
+
+def _find_seed_record(college_name: str) -> tuple[str | None, Dict[str, Any] | None]:
     name_lower = college_name.lower()
-    
     for key, record in COLLEGE_METRICS_DB.items():
         keywords = record.get("keywords", [key])
-        if any(kw in name_lower for kw in keywords):
-            return record
+        if any(keyword.lower() in name_lower for keyword in keywords):
+            return key, record
+    for key, record in AUTHENTIC_COLLEGE_RECORDS.items():
+        keywords = record.get("keywords", [key])
+        if any(keyword.lower() in name_lower for keyword in keywords):
+            return key, record
+    return None, None
 
-    return DEFAULT_METRICS
+
+def _cache_is_fresh(cached: Dict[str, Any]) -> bool:
+    fetched_at = cached.get("fetched_at")
+    if not fetched_at:
+        return False
+    try:
+        fetched = datetime.fromisoformat(fetched_at)
+    except ValueError:
+        return False
+    return (datetime.now(timezone.utc) - fetched).total_seconds() < CACHE_TTL_SECONDS
+
+
+def get_enriched_metrics(college_name: str) -> Dict[str, Any]:
+    """Return cached official-site data, refreshing one college when stale."""
+    key, seed = _find_seed_record(college_name)
+    if not key or not seed:
+        return dict(DEFAULT_METRICS, data_source="CAP fallback")
+
+    with _CACHE_LOCK:
+        cache = _load_cache()
+        cached = cache.get(key)
+        if (
+            isinstance(cached, dict)
+            and isinstance(cached.get("metrics"), dict)
+            and _cache_is_fresh(cached)
+        ):
+            return cached["metrics"]
+
+        try:
+            metrics = scrape_college_record(seed)
+            source = "Official college website"
+        except (OSError, ValueError, TimeoutError):
+            metrics = dict(seed)
+            source = "Verified snapshot (live refresh unavailable)"
+
+        metrics["data_source"] = source
+        metrics.setdefault("image_source", "Verified snapshot image")
+        metrics["fetched_at"] = datetime.now(timezone.utc).isoformat()
+        cache[key] = {"fetched_at": metrics["fetched_at"], "metrics": metrics}
+        _write_cache(cache)
+        return metrics
 
 
 def generate_groq_ai_summary(
