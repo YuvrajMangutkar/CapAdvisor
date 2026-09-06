@@ -11,6 +11,8 @@ import os
 import json
 import urllib.request
 import urllib.error
+import re
+from urllib.parse import urljoin
 from datetime import datetime
 from typing import Dict, Any, List
 
@@ -172,6 +174,81 @@ AUTHENTIC_COLLEGE_RECORDS = {
         "highlights": "Akurdi Pune campus. Known for modern architectural infrastructure and active campus recruitment drives."
     }
 }
+
+
+def _clean_html(value: str) -> str:
+    """Reduce HTML to searchable text without requiring a third-party parser."""
+    value = re.sub(r"(?is)<script.*?</script>|<style.*?</style>", " ", value)
+    value = re.sub(r"(?s)<[^>]+>", " ", value)
+    return re.sub(r"\s+", " ", value).strip()
+
+
+def scrape_college_record(record: Dict[str, Any], timeout: int = 8) -> Dict[str, Any]:
+    """
+    Fetch public information from the college's official website.
+
+    The seed record remains authoritative for fields an official page does not
+    expose in a predictable format. This makes a site redesign a cache miss,
+    not a reason to return fabricated values.
+    """
+    website = record.get("official_website")
+    if not website:
+        raise ValueError("College has no official website configured")
+
+    request = urllib.request.Request(
+        website,
+        headers={"User-Agent": "CAP-Advisor/1.0 (+college-data-refresh)"},
+    )
+    with urllib.request.urlopen(request, timeout=timeout) as response:
+        html = response.read().decode("utf-8", errors="replace")
+
+    text = _clean_html(html)
+    refreshed = dict(record)
+    refreshed["source_url"] = response.geturl()
+
+    image_url = None
+    for tag in re.findall(r"<meta\b[^>]*>", html, flags=re.IGNORECASE):
+        property_match = re.search(
+            r'(?:property|name)\s*=\s*["\'](?:og:image|twitter:image)["\']',
+            tag,
+            flags=re.IGNORECASE,
+        )
+        content_match = re.search(
+            r'content\s*=\s*["\']([^"\']+)',
+            tag,
+            flags=re.IGNORECASE,
+        )
+        if property_match and content_match:
+            image_url = urljoin(response.geturl(), content_match.group(1))
+            break
+    if image_url:
+        refreshed["image_url"] = image_url
+        refreshed["image_source"] = "Official college website"
+
+    placement_match = re.search(
+        r"(?:placement|placed|employment)[^%]{0,120}(\d{2}(?:\.\d+)?)\s*%",
+        text,
+        flags=re.IGNORECASE,
+    )
+    if placement_match:
+        placement_rate = float(placement_match.group(1))
+        if 0 < placement_rate <= 100:
+            refreshed["placement_rate"] = placement_rate
+
+    package_matches = re.findall(
+        r"(?:average|avg|highest|maximum|package)[^0-9]{0,60}"
+        r"(?:₹\s*)?(\d+(?:\.\d+)?)\s*(?:lpa|lakhs?)",
+        text,
+        flags=re.IGNORECASE,
+    )
+    package_values = [float(value) for value in package_matches if 0 < float(value) < 500]
+    if package_values:
+        refreshed["highest_package_lpa"] = max(
+            float(refreshed.get("highest_package_lpa", 0)),
+            max(package_values),
+        )
+
+    return refreshed
 
 
 def build_and_save_scraped_dataset(output_path: str = None) -> Dict[str, Any]:

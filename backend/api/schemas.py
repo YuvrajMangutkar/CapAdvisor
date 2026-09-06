@@ -155,6 +155,8 @@ class CollegeComparisonItem(BaseModel):
     infrastructure_rating: float
     image_url: str
     highlights: str
+    data_source: str = "Verified snapshot"
+    fetched_at: Optional[str] = None
 
 
 class CompareTop5Response(BaseModel):
@@ -162,4 +164,3 @@ class CompareTop5Response(BaseModel):
     category_code: str
     comparison_items: List[CollegeComparisonItem]
     ai_decision_summary: str
-

@@ -203,7 +203,9 @@ def compare_top5_colleges(req: CompareTop5Request):
             lab_quality_rating=metrics["lab_quality_rating"],
             infrastructure_rating=metrics["infrastructure_rating"],
             image_url=metrics["image_url"],
-            highlights=metrics["highlights"]
+            highlights=metrics["highlights"],
+            data_source=metrics.get("data_source", "Verified snapshot"),
+            fetched_at=metrics.get("fetched_at"),
         )
         comparison_items.append(item)
         enriched_for_ai.append(item.model_dump())
